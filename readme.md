@@ -64,4 +64,5 @@ Para acionar o workflow, basta enviar um e-mail com o assunto contendo `Planilha
 
 * fluxo_financeiro_julialana.json (export do workflow)
 
-* readme.md
+* README.md
+
