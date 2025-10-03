@@ -1,0 +1,328 @@
+{
+  "name": "case onfly",
+  "nodes": [
+    {
+      "parameters": {
+        "downloadAttachments": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        -80
+      ],
+      "id": "68607e66-c492-4106-b3a9-92bce3455a2b",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "cuHVIEHnB9e7Ewvb",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://open.er-api.com/v6/latest/USD",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -176
+      ],
+      "id": "72a33436-708b-40d5-8e94-d6420f472deb",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4b3ab4f6-3c3b-4ee4-881e-817b050dc191",
+              "leftValue": "={{$binary[\"attachment_0\"][\"fileExtension\"]}}",
+              "rightValue": "csv",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "41a78cb0-977c-4a5c-8529-2be700ae25cd",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "Planilha financeira",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        -80
+      ],
+      "id": "b6cf9690-1b2e-45be-b68f-1912ee5a89ba",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "\"Financeiro Onfly\" <juliana.comercial@gmail.com>",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.from }}",
+        "subject": "=Confirmação de recebimento",
+        "html": "=<p>Olá,</p>\n<p>O arquivo do e-mail <strong>{{ $('Email Trigger (IMAP)').item.json.subject }}</strong> foi recebido e  salvo com sucesso no Google Drive. Para visualizar, <a href=\"{{ $('Upload file').item.json.webViewLink }}\">clique aqui</a> </p>\n<p>A cotação do dólar atualmente é (USD/BRL) é: <p> <strong>{{ $json.USD }} <br> {{ $json.BRL }}</strong></p>\n\n<i>Atenciosamente</i>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        848,
+        -176
+      ],
+      "id": "6dfd58e8-9470-47e3-bf34-41a7e273b110",
+      "name": "Send email",
+      "webhookId": "e3d1e8a4-89dd-4094-8eda-03c3465ba559",
+      "credentials": {
+        "smtp": {
+          "id": "Zxva667mGesXcgBG",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89a33786-058f-4b62-9cc0-c08984e61113",
+              "name": "=USD",
+              "value": "={{ 'US$ ' + $json.rates.USD }}",
+              "type": "string"
+            },
+            {
+              "id": "6859daf3-7f18-49cc-be93-b4203e3b9e1e",
+              "name": "=BRL",
+              "value": "={{ 'R$ ' + $json.rates.BRL }}",
+              "type": "string"
+            },
+            {
+              "id": "74c97791-d669-4464-af4f-395a015ebd7d",
+              "name": "headers",
+              "value": "={{\n  {\n    \"In-Reply-To\": $('Email Trigger (IMAP)').item.json.metadata['message-id'],\n    \"References\": $('Email Trigger (IMAP)').item.json.metadata['message-id']\n  }\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -176
+      ],
+      "id": "4a5b5f09-2b48-42db-aa52-0fbf8ad65648",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b62e37b9-e6bc-4034-b3c0-22f487b5029b",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        16
+      ],
+      "id": "b086417e-d010-4901-96c8-d53fc9ca8bdd",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "attachment_0",
+        "name": "=arquivo_financeiro - {{$now.toFormat('dd-MM-yyyy HH:mm')}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Ockom5h1kf_Y_ikQFH64eeJSFHZYHqqT",
+          "mode": "list",
+          "cachedResultName": "n8n automation",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Ockom5h1kf_Y_ikQFH64eeJSFHZYHqqT"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        176,
+        -176
+      ],
+      "id": "ed84ad9e-e836-4abe-ab3b-2b0fff396615",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Z2Idxv5xab4ZBIZS",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "\"Financeiro Onfly\" <juliana.comercial@gmail.com>",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.from }}",
+        "subject": "=Erro na cotação",
+        "html": "=<p>Olá,</p>\n<p>O arquivo do e-mail <strong>{{ $('Email Trigger (IMAP)').item.json.subject }}</strong> não foi encontrado. Verifique se o mesmo possui algum anexo em formato .csv e envie novamente.</p>\n\n<i>Atenciosamente</i>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        16
+      ],
+      "id": "ccc48575-6b00-4855-aef4-8533bfc0a5c2",
+      "name": "Send email error",
+      "webhookId": "e3d1e8a4-89dd-4094-8eda-03c3465ba559",
+      "credentials": {
+        "smtp": {
+          "id": "Zxva667mGesXcgBG",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send email error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email error": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "53a6ba28-f366-4c91-abb3-32cdf3dce743",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "eeea32d526eab267e70dd0374726d33383b5889331cc43475334287e31d39175"
+  },
+  "id": "rBCmvUbBGS4oEfAM",
+  "tags": []
+}
